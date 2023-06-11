@@ -1,59 +1,42 @@
-const { GPU } = require("gpu.js");
-let SIZE = 1024;
+import generateConfigurations from "./generateConfigurations.js";
 
-// Generate two random matrices of size 1024x1024
-const generateMatrices = () => {
-  const matrices = [[], []];
-  for (let y = 0; y < SIZE; y++) {
-    matrices[0].push([]);
-    matrices[1].push([]);
-    for (let x = 0; x < SIZE; x++) {
-      matrices[0][y].push(Math.random());
-      matrices[1][y].push(Math.random());
-    }
-  }
-  return matrices;
-};
+// n = number of functions
+// m = number of variables
+// g = number of neurons
+// q = number of spiking vectors
 
-const gpu = new GPU();
+// Configuration Matrix
+let C = [[1, 1, 2]];
 
-// GPU implementation
-const multiplyMatrixGPU = gpu
-  .createKernel(function (a, b) {
-    let sum = 0;
-    for (let i = 0; i < 1024; i++) {
-      sum += b[i][this.thread.x] * a[this.thread.y][i];
-    }
-    return sum;
-  })
-  .setOutput([1024, 1024]);
+// Variable Location
+let VL = [1, 1, 2];
 
-// CPU implementation
-const multiplyMatrixCPU = (a, b) => {
-  const out = [];
-  for (let y = 0; y < SIZE; y++) {
-    out.push([]);
-    for (let x = 0; x < SIZE; x++) {
-      let sum = 0;
-      for (let i = 0; i < SIZE; i++) {
-        sum += a[y][i] * b[i][x];
-      }
-      out[y].push(sum);
-    }
-  }
-  return out;
-};
+// Function Matrix
+let F = [
+  [1, 1, 0],
+  [0.5, 0.5, 0],
+  [0, 0, 1],
+  [0, 0, 0.5],
+];
 
-const matrices = generateMatrices();
+// Function Location Matrix
+let L = [
+  [1, 0],
+  [1, 0],
+  [0, 1],
+  [0, 1],
+];
 
-console.time("GPU");
-const out = multiplyMatrixGPU(matrices[0], matrices[1]);
-console.timeEnd("GPU");
-console.log(out[10][12]); // Logs the element at the 10th row and the 12th column of the output matrix
+// Threshold list
+let T = [[4, 4]];
 
-console.time("CPU");
-const out2 = multiplyMatrixCPU(matrices[0], matrices[1]);
-console.timeEnd("CPU");
-console.log(out2[10][12]);
+// Synapse list
+let syn = [
+  [1, 2],
+  [2, 1],
+];
 
-// console.log(out[y][x]); // Logs the element at the xth row and the yth column of the matrix
+console.log(
+  "State Configuration",
+  generateConfigurations(C, 4, L, F, T, VL, syn).exploredStates
+);
