@@ -81,6 +81,8 @@ export function generateSM(C, L, F, T) {
   // for each neuron m find the number of possible spiking vectors
   let q_i = q.valueOf();
   for (let m = 0; m < L[0].length; m++) {
+    console.log("m: ", m);
+    console.log("");
     let functions = getFunctions(m, active);
 
     // For each neuron, if the number of functions is 0, then set all the values of the spiking vector to 0
@@ -91,9 +93,11 @@ export function generateSM(C, L, F, T) {
           S[k][functions[j]] = 0;
         }
       }
+      continue;
     }
     // If the number of functions is 1, then set all the values of the spiking vector to 1
     else {
+      console.log(functions);
       let i = 0;
       let p = q_i / n[m];
       while (i < q) {
@@ -101,6 +105,9 @@ export function generateSM(C, L, F, T) {
           //correct
           let k = 0;
           while (k < p) {
+            console.log("q_i: ", q_i, "n[m]: ", n[m], "p: ", p);
+            console.log("i: ", i, "j: ", j, "k: ", k);
+            console.log("S[", i, "]: ", S[i]);
             S[i][functions[j]] = 1;
 
             k++;
