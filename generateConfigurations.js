@@ -1,7 +1,7 @@
 import { arrayEquals } from "./universal.js";
 import { generateSM } from "./generateSV.js";
 import { generatePM } from "./generatePM.js";
-import { GPUMatrixMul, multiplyMatrixCPU } from "./gputest.js";
+import { GPUMatrixMul } from "./gputest.js";
 
 // Hard-coded Spiking Matrix
 let S_debug = [
@@ -77,7 +77,8 @@ export default function generateConfigurations(
   F,
   T,
   VL,
-  syn
+  syn,
+  isGPU = 0
   // envSyn
 ) {
   let unexploredStates = C;
@@ -95,11 +96,12 @@ export default function generateConfigurations(
       P = PM;
 
       let V = checkActiveVars(S, F, C);
-      console.time("multiplyMatrixGPU");
-      let NG = GPUMatrixMul(S, P);
-      console.log("NG: ", NG);
-      console.timeEnd("multiplyMatrixGPU");
-      // NG = multiplyMatrix(S, P);
+      let NG = [];
+      if (isGPU == 0) {
+        NG = multiplyMatrix(S, P);
+      } else {
+        NG = GPUMatrixMul(S, P);
+      }
 
       let C_next = addMatrix(V, NG);
 
@@ -107,7 +109,6 @@ export default function generateConfigurations(
         if (!exploredStates.find((x) => arrayEquals(x, C_next[j]))) {
           nextstates.push(C_next[j]);
         } else {
-          console.log("Already Explored: ", C_next[j]);
         }
       }
 
@@ -119,11 +120,10 @@ export default function generateConfigurations(
     // Add nextstates to unexplored states
 
     unexploredStates.push(...nextstates);
-    console.log("Explored States: ", exploredStates);
-    console.log("Unexplored States: ", unexploredStates);
-    console.log("Depth: ", depth);
+    // console.log("Explored States: ", exploredStates);
+    // console.log("Unexplored States: ", unexploredStates);
+    // console.log("Depth: ", depth);
     depth++;
-    console.log("\n");
   }
 
   return { unexploredStates, S, P, finalEnvValue, exploredStates };

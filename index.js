@@ -36,7 +36,15 @@ let syn = [
   [2, 1],
 ];
 
-console.log(
-  "State Configuration",
-  generateConfigurations(C, 3, L, F, T, VL, syn).exploredStates
-);
+// Controls
+let depth = 10;
+
+console.time("CPU");
+generateConfigurations(C, depth, L, F, T, VL, syn, 0);
+console.timeEnd("CPU");
+
+console.log("");
+
+console.time("GPU");
+generateConfigurations(C, depth, L, F, T, VL, syn, 1);
+console.timeEnd("GPU");
