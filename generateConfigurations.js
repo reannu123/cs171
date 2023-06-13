@@ -114,7 +114,7 @@ export default function generateConfigurations(
 
       // console.log("Unexplored State: ", unexploredStates[i]);
       S = generateSM(unexploredStates[i], L, F, T);
-      S = S_debug;
+      // S = S_debug;
       console.log("S: ", S);
       let PM = generatePM(unexploredStates[i], F, L, VL, syn, T);
       P = PM;

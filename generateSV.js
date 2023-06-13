@@ -3,7 +3,7 @@
 // Helper Functions
 import { checkThreshold } from "./universal.js";
 
-function computeCombination(n) {
+function computeCombination(n, L, T) {
   let combination = 1;
   for (let i = 0; i < n.length; i++) {
     if (n[i] != 0) {
@@ -79,6 +79,7 @@ export function generateSM(C, L, F, T) {
   }
 
   // for each neuron m find the number of possible spiking vectors
+  let q_i = q.valueOf();
   for (let m = 0; m < L[0].length; m++) {
     let functions = getFunctions(m, active);
 
@@ -86,7 +87,7 @@ export function generateSM(C, L, F, T) {
     if (n[m] == 0) {
       //for each element in functions, and for each row in S, set the value of S to 0
       for (let j = 0; j < functions.length; j++) {
-        for (let k = 0; k < S.length; k++) {
+        for (let k = 0; k < q_i; k++) {
           S[k][functions[j]] = 0;
         }
       }
@@ -94,20 +95,22 @@ export function generateSM(C, L, F, T) {
     // If the number of functions is 1, then set all the values of the spiking vector to 1
     else {
       let i = 0;
-      let p = n[m] / q;
-      for (let j = 0; j < functions.length; j++) {
-        //correct
-        let k = 0;
-        while (k < p) {
-          S[i][functions[j]] = 1;
+      let p = q_i / n[m];
+      while (i < q) {
+        for (let j = 0; j < functions.length; j++) {
+          //correct
+          let k = 0;
+          while (k < p) {
+            S[i][functions[j]] = 1;
 
-          k++;
-          i++;
+            k++;
+            i++;
+          }
         }
       }
     }
 
-    q = q / n[m];
+    q_i = q_i / n[m];
   }
   return S;
 }
