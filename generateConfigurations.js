@@ -1,7 +1,7 @@
 import { arrayEquals } from "./universal.js";
 import { generateSM } from "./generateSV.js";
 import { generatePM } from "./generatePM.js";
-import { GPUMatrixMul } from "./gputest.js";
+import { GPUMatrixMul, GPUMatrixAdd } from "./gputest.js";
 
 // Hard-coded Spiking Matrix
 let S_debug = [
@@ -97,13 +97,17 @@ export default function generateConfigurations(
 
       let V = checkActiveVars(S, F, C);
       let NG = [];
+      let C_next = [];
       if (isGPU == 0) {
+        console.time("cpumult");
         NG = multiplyMatrix(S, P);
+        C_next = addMatrix(V, NG);
+        console.timeEnd("cpumult");
       } else {
-        NG = GPUMatrixMul(S, P);
+        console.time("gpumult");
+        C_next = GPUMatrixMul(S, P, V);
+        console.timeEnd("gpumult");
       }
-
-      let C_next = addMatrix(V, NG);
 
       for (let j = 0; j < C_next.length; j++) {
         if (!exploredStates.find((x) => arrayEquals(x, C_next[j]))) {
