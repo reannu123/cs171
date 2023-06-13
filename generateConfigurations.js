@@ -1,6 +1,7 @@
 import { arrayEquals } from "./universal.js";
 import { generateSM } from "./generateSV.js";
 import { generatePM } from "./generatePM.js";
+import { GPUMatrixMul, multiplyMatrixCPU } from "./gputest.js";
 
 // Hard-coded Spiking Matrix
 let S_debug = [
@@ -62,16 +63,7 @@ function checkActiveVars(S, F) {
       }
     }
   }
-  // console.log("C", C);
 
-  // If unused, need to make sure that the original value is set
-  // for (let i = 0; i < V.length; i++) {
-  //   for (let j = 0; j < V[i].length; j++) {
-  //     if (V[i][j] == 1) {
-  //       V[i][j] = C[0][j];
-  //     }
-  //   }
-  // }
   return V;
 }
 
@@ -90,70 +82,43 @@ export default function generateConfigurations(
 ) {
   let unexploredStates = C;
   let exploredStates = [];
-  // let graph = require("./graphType");
-  // let currentNode = new graph.Node(C[0]);
-  // let rootNode = currentNode;
-  // let computationHistory = new graph.Graph(currentNode);
 
   let depth = 0;
-  // let currentDepth = 0;
   let S = [];
   let P = [];
-  // let envValue = [];
-  // let funcValue = [];
   let finalEnvValue = 0;
   while (depth < maxDepth) {
     let nextstates = [];
     for (let i = 0; i < unexploredStates.length; i++) {
-      // if (currentDepth != depth) {
-      //   newNode = new graph.Node(unexploredStates[i]);
-      //   currentNode.addChild(newNode);
-      //   currentNode = newNode;
-      //   currentDepth = depth;
-      // }
-
-      // console.log("Unexplored State: ", unexploredStates[i]);
       S = generateSM(unexploredStates[i], L, F, T);
-      // S = S_debug;
-      console.log("S: ", S);
       let PM = generatePM(unexploredStates[i], F, L, VL, syn, T);
       P = PM;
-      console.log("P: ", P);
-      // envValue = PM.envValue;
-      // funcValue = PM.funcValue;
-
-      // for (let i = 0; i < funcValue.length; i++) {
-      //   if (S[0][funcValue[i]] != 0) {
-      //     finalEnvValue = envValue[i];
-      //   }
-      // }
 
       let V = checkActiveVars(S, F, C);
-      let NG = multiplyMatrix(S, P);
+      console.time("multiplyMatrixGPU");
+      let NG = GPUMatrixMul(S, P);
+      console.log("NG: ", NG);
+      console.timeEnd("multiplyMatrixGPU");
+      // NG = multiplyMatrix(S, P);
+
       let C_next = addMatrix(V, NG);
 
       for (let j = 0; j < C_next.length; j++) {
-        // For each configuration in C_next, check if it is already in ExploredStates
-        // If it is not, add it to the nextstates array
         if (!exploredStates.find((x) => arrayEquals(x, C_next[j]))) {
           nextstates.push(C_next[j]);
         } else {
           console.log("Already Explored: ", C_next[j]);
         }
-
-        // currentNode.addChild(new graph.Node(C_next[j]));
       }
 
       // Add unexplored states[i] to explored states
       exploredStates.push(unexploredStates[i]);
-
-      // graph.printAncestry(currentNode);
     }
     // clear unexplored states
     unexploredStates = [];
     // Add nextstates to unexplored states
+
     unexploredStates.push(...nextstates);
-    // graph.printGraph(computationHistory);
     console.log("Explored States: ", exploredStates);
     console.log("Unexplored States: ", unexploredStates);
     console.log("Depth: ", depth);

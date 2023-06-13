@@ -38,5 +38,5 @@ let syn = [
 
 console.log(
   "State Configuration",
-  generateConfigurations(C, 4, L, F, T, VL, syn).exploredStates
+  generateConfigurations(C, 3, L, F, T, VL, syn).exploredStates
 );
