@@ -99,14 +99,14 @@ export default function generateConfigurations(
       let NG = [];
       let C_next = [];
       if (isGPU == 0) {
-        console.time("cpumult");
+        // console.time("CPU Gen");
         NG = multiplyMatrix(S, P);
         C_next = addMatrix(V, NG);
-        console.timeEnd("cpumult");
+        // console.timeEnd("CPU Gen");
       } else {
-        console.time("gpumult");
+        // console.time("GPU Gen");
         C_next = GPUMatrixMul(S, P, V);
-        console.timeEnd("gpumult");
+        // console.timeEnd("GPU Gen");
       }
 
       for (let j = 0; j < C_next.length; j++) {

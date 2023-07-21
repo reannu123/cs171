@@ -116,8 +116,8 @@ let syn = [
 ];
 
 // Controls
-let depth = 1;
-
+let depth = 2;
+console.log("Depth: ", depth);
 console.time("CPU");
 generateConfigurations(C, depth, L, F, T, VL, syn, 0);
 console.timeEnd("CPU");
