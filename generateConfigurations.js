@@ -1,7 +1,7 @@
 import { arrayEquals } from "./universal.js";
 import { generateSM } from "./generateSV.js";
 import { generatePM } from "./generatePM.js";
-import { GPUMatrixMul, GPUMatrixAdd } from "./gputest.js";
+import { GPUMatrixMul } from "./gputest.js";
 
 // Hard-coded Spiking Matrix
 let S_debug = [
@@ -68,9 +68,8 @@ function checkActiveVars(S, F) {
 }
 
 // Algorithm 3: Computation Graph
-// Generates computation graph from a given initial configuration
+// Generates configuration graph from a given initial configuration
 export default function generateConfigurations(
-  // guidedMode,
   C,
   maxDepth,
   L,
@@ -79,7 +78,6 @@ export default function generateConfigurations(
   VL,
   syn,
   isGPU = 0
-  // envSyn
 ) {
   let unexploredStates = C;
   let exploredStates = [];
@@ -89,6 +87,9 @@ export default function generateConfigurations(
   let P = [];
   let finalEnvValue = 0;
   while (depth < maxDepth) {
+    console.log("Current Depth: ", depth);
+    console.time("Depth Time");
+
     let nextstates = [];
     for (let i = 0; i < unexploredStates.length; i++) {
       S = generateSM(unexploredStates[i], L, F, T);
@@ -99,35 +100,32 @@ export default function generateConfigurations(
       let NG = [];
       let C_next = [];
       if (isGPU == 0) {
-        // console.time("CPU Gen");
         NG = multiplyMatrix(S, P);
         C_next = addMatrix(V, NG);
-        // console.timeEnd("CPU Gen");
       } else {
-        // console.time("GPU Gen");
         C_next = GPUMatrixMul(S, P, V);
-        // console.timeEnd("GPU Gen");
       }
 
       for (let j = 0; j < C_next.length; j++) {
         if (!exploredStates.find((x) => arrayEquals(x, C_next[j]))) {
           nextstates.push(C_next[j]);
-        } else {
         }
       }
-
-      // Add unexplored states[i] to explored states
-      exploredStates.push(unexploredStates[i]);
+      // if unexploredStates[i] is not in exploredStates, push it to exploredStates
+      let isExplored = false;
+      for (let k = 0; k < exploredStates.length; k++) {
+        if (arrayEquals(unexploredStates[i], exploredStates[k])) {
+          isExplored = true;
+          break;
+        }
+      }
+      if (!isExplored) exploredStates.push(unexploredStates[i]);
     }
-    // clear unexplored states
     unexploredStates = [];
-    // Add nextstates to unexplored states
 
     unexploredStates.push(...nextstates);
-    // console.log("Explored States: ", exploredStates);
-    // console.log("Unexplored States: ", unexploredStates);
-    // console.log("Depth: ", depth);
     depth++;
+    console.timeEnd("Depth Time");
   }
 
   return { unexploredStates, S, P, finalEnvValue, exploredStates };
